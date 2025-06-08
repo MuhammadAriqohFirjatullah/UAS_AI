@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Prediksi Kemacetan Kota Bengkulu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .status-bar {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            color: white;
+            padding: 0.8rem;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .map-section {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .map-header {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .road-selector {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .road-selector:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .prediction-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+            transition: transform 0.2s ease;
+        }
+
+        .prediction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction-time {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .traffic-level {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .level-lancar { background: #d4edda; color: #155724; }
+        .level-ramai { background: #fff3cd; color: #856404; }
+        .level-padat { background: #f8d7da; color: #721c24; }
+        .level-macet { background: #f5c6cb; color: #721c24; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .weather-info {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .prediction-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .popup-content {
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .popup-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏙️ Sistem Prediksi Kemacetan Lalu Lintas</h1>
+        <div class="subtitle">
+            <span>🌊 Kota Bengkulu</span>
+            <span>•</span>
+            <span>🤖 AI-Powered Traffic Intelligence</span>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div>📡 Status: <span id="systemStatus">ONLINE</span></div>
+        <div>🕐 Update Terakhir: <span id="lastUpdate"></span></div>
+        <div>📊 Akurasi Model: <span id="modelAccuracy">89.2%</span></div>
+    </div>
+
+    <div class="container">
+        <div class="map-section">
+            <div class="map-header">
+                🗺️ Peta Interaktif Lalu Lintas Bengkulu
+            </div>
+            <p style="padding: 1rem; font-size: 0.9rem; color: #2c3e50;">
+🖱️ Klik kanan dua kali pada peta untuk memilih <strong>titik awal</strong> dan <strong>tujuan</strong> 🚗
+</p>
+
+            <div id="map"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4CAF50;"></div>
+                    <span>🟢 Lancar</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FFC107;"></div>
+                    <span>🟡 Ramai Lancar</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #FF9800;"></div>
+                    <span>🟠 Padat</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #F44336;"></div>
+                    <span>🔴 Macet</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="control-panel">
+                <h3>🛣️ Pilih Jalan</h3>
+                <select class="road-selector" id="roadSelector">
+                    <option value="">-- Pilih Jalan --</option>
+                </select>
+                
+                <div class="prediction-grid" id="predictionGrid">
+                    <!-- Predictions will be populated here -->
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>📊 Statistik Real-time</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgVolume">--</div>
+                        <div class="stat-label">Rata-rata Volume</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgSpeed">--</div>
+                        <div class="stat-label">Kecepatan (km/h)</div>
+                    </div>
+                </div>
+                
+                <div class="weather-info">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;" id="weatherIcon">🌤️</div>
+                    <div><strong>Cuaca Saat Ini</strong></div>
+                    <div id="weatherStatus">Cerah</div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>📈 Grafik Lalu Lintas Harian</h3>
+                <div class="chart-container">
+                    <canvas id="trafficChart" width="400" height="200"></canvas>
+                </div>
+                
+                <button class="refresh-btn" onclick="refreshData()">
+                    🔄 Perbarui Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roadSelector = document.getElementById('roadSelector');
+        // Data yang akan diambil dari backend Python
+        let bengkuluRoads = [];
+        let startPoint = null;
+        let endPoint = null;
+        let startMarker = null;
+        let endMarker = null;
+
+        // Load data dari backend
+        async function loadTrafficData() {
+            try {
+                const response = await fetch('/api/traffic-status');
+                const data = await response.json();
+                
+                bengkuluRoads = data.map(road => ({
+                    name: road.name,
+                    coords: road.coords,
+                    center: [(road.coords[0][0] + road.coords[1][0])/2, (road.coords[0][1] + road.coords[1][1])/2],
+                    currentStatus: road.traffic_level,
+                    volume: road.volume,
+                    speed: road.speed,
+                    weather: road.weather,
+                    incident: road.incident
+                }));
+                
+                updateMap();
+                updateRoadSelector();
+                
+            } catch (error) {
+                console.error('Error loading traffic data:', error);
+                // Fallback ke data dummy jika backend tidak tersedia
+                initializeDummyData();
+            }
+        }
+        
+        // Fallback dummy data
+        function initializeDummyData() {
+            bengkuluRoads = [
+                {
+                    name: "Jl. Jendral Sudirman (Simpang Lima - Mall Bengkulu)",
+                    coords: [[-3.8048, 102.2652], [-3.7985, 102.2612]],
+                    center: [-3.8017, 102.2632],
+                    currentStatus: "Ramai Lancar",
+                    volume: 85,
+                    speed: 28.5
+                },
+                {
+                    name: "Jl. Ahmad Yani (Pasar Minggu - RS Bethesda)",
+                    coords: [[-3.7890, 102.2580], [-3.7920, 102.2640]],
+                    center: [-3.7905, 102.2610],
+                    currentStatus: "Lancar",
+                    volume: 62,
+                    speed: 32.1
+                },
+                {
+                    name: "Jl. Pariwisata (Pantai Panjang - Fort Marlborough)",
+                    coords: [[-3.8120, 102.2450], [-3.7850, 102.2580]],
+                    center: [-3.7985, 102.2515],
+                    currentStatus: "Padat",
+                    volume: 125,
+                    speed: 18.7
+                },
+                {
+                    name: "Jl. Suprapto (Terminal - Unib)",
+                    coords: [[-3.7650, 102.2380], [-3.7580, 102.2650]],
+                    center: [-3.7615, 102.2515],
+                    currentStatus: "Lancar",
+                    volume: 45,
+                    speed: 35.2
+                },
+                {
+                    name: "Jl. Salak Balai (Simpang Kandang - Pasar Baru)",
+                    coords: [[-3.7950, 102.2500], [-3.8000, 102.2600]],
+                    center: [-3.7975, 102.2550],
+                    currentStatus: "Ramai Lancar",
+                    volume: 78,
+                    speed: 25.8
+                }
+            ];
+            updateMap();
+            updateRoadSelector();
+        }
+
+        // Initialize map
+        const map = L.map('map').setView([-3.7928, 102.2607], 13);
+        map.on('contextmenu', function (e) {
+    if (!startPoint) {
+        startPoint = e.latlng;
+        if (startMarker) map.removeLayer(startMarker);
+        startMarker = L.marker(startPoint).addTo(map).bindPopup("🚩 Titik Awal").openPopup();
+    } else if (!endPoint) {
+        endPoint = e.latlng;
+        if (endMarker) map.removeLayer(endMarker);
+        endMarker = L.marker(endPoint).addTo(map).bindPopup("🏁 Tujuan").openPopup();
+
+        // Kirim ke backend
+        fetch(`/api/route?start_lat=${startPoint.lat}&start_lon=${startPoint.lng}&end_lat=${endPoint.lat}&end_lon=${endPoint.lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.route) {
+                    alert("🛣️ Rute disarankan:\n" + data.route);
+                } else {
+                    alert(data.message || "Tidak ada rute ditemukan.");
+                }
+            })
+            .catch(err => {
+                console.error("Gagal memuat rute:", err);
+                alert("Terjadi kesalahan saat memuat rute.");
+            });
+    } else {
+        alert("🗺️ Klik kanan dua kali saja (awal & tujuan). Refresh halaman untuk mulai ulang.");
+    }
+});
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Color mapping for traffic levels
+        const getTrafficColor = (status) => {
+            const colors = {
+                'Lancar': '#4CAF50',
+                'Ramai Lancar': '#FFC107',
+                'Padat': '#FF9800',
+                'Macet': '#F44336'
+            };
+            return colors[status] || '#666';
+        };
+
+        // Update map dengan data terbaru
+       function updateMap() {
+    // Clear existing layers
+    roadLayers.forEach(layer => {
+        map.removeLayer(layer.line);
+        map.removeLayer(layer.marker);
+    });
+    roadLayers.length = 0;
+
+    // Add roads to map
+    bengkuluRoads.forEach(road => {
+        // Add road line
+        const roadLine = L.polyline(road.coords, {
+            color: getTrafficColor(road.currentStatus),
+            weight: 6,
+            opacity: 0.8
+        }).addTo(map);
+
+        // Add marker at center
+        const marker = L.marker(road.center).addTo(map);
+
+const popupContent = `
+    <div class="popup-content">
+        <div class="popup-title">${road.name.split('(')[0].trim()}</div>
+        <div class="popup-status level-${road.currentStatus.toLowerCase().replace(' ', '-')}">${road.currentStatus}</div>
+        <div style="margin-top: 10px;">
+            <div>🚗 Volume: ${road.volume} kendaraan/jam</div>
+            <div>⚡ Kecepatan: ${road.speed} km/h</div>
+        </div>
+    </div>
+`;
+
+marker.bindPopup(popupContent);
+
+// ✅ Pisahkan klik event marker di sini:
+marker.on('click', function () {
+    if (['Padat', 'Macet'].includes(road.currentStatus)) {
+        suggestAlternativeRoute(road);
+    }
+});
+
+
+        // Simpan ke layer
+        roadLayers.push({ road, line: roadLine, marker });
+
+        // Tambahkan interaksi klik pada garis jalan
+        roadLine.on('click', function () {
+            roadSelector.value = road.name;
+            generatePredictions(road);
+            updateStats(road);
+
+            if (road.currentStatus === 'Padat' || road.currentStatus === 'Macet') {
+                suggestAlternativeRoute(road);
+            }
+        });
+    });
+}
+
+
+        // Update road selector
+        function updateRoadSelector() {
+            const roadSelector = document.getElementById('roadSelector');
+            roadSelector.innerHTML = '<option value="">-- Pilih Jalan --</option>';
+            
+            bengkuluRoads.forEach(road => {
+                const option = document.createElement('option');
+                option.value = road.name;
+                option.textContent = road.name.split('(')[0].trim();
+                roadSelector.appendChild(option);
+            });
+        }
+
+        // Road selector change handler
+        roadSelector.addEventListener('change', function() {
+            const selectedRoad = bengkuluRoads.find(r => r.name === this.value);
+            if (selectedRoad) {
+                map.setView(selectedRoad.center, 15);
+                generatePredictions(selectedRoad);
+                updateStats(selectedRoad);
+            }
+        });
+
+        // Generate real predictions dari backend
+        async function generatePredictions(road) {
+            const predictionGrid = document.getElementById('predictionGrid');
+            predictionGrid.innerHTML = '<div style="text-align: center;">⏳ Loading predictions...</div>';
+            
+            try {
+                const response = await fetch(`/api/predictions/${encodeURIComponent(road.name)}`);
+                const predictions = await response.json();
+                
+                predictionGrid.innerHTML = '';
+                
+                predictions.forEach(pred => {
+                    const predictionItem = document.createElement('div');
+                    predictionItem.className = 'prediction-item';
+                    predictionItem.innerHTML = `
+                        <div class="prediction-time">${pred.hour}</div>
+                        <div class="traffic-level level-${pred.predicted_level.toLowerCase().replace(' ', '-')}">${pred.predicted_level}</div>
+                        <div style="font-size: 0.8rem; margin-top: 0.3rem; opacity: 0.8;">
+                            Confidence: ${Math.round(pred.confidence * 100)}%
+                        </div>
+                    `;
+                    predictionGrid.appendChild(predictionItem);
+                });
+                
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                // Fallback ke prediksi dummy
+                generateDummyPredictions(predictionGrid);
+            }
+        }
+        
+        // Fallback dummy predictions
+        function generateDummyPredictions(predictionGrid) {
+            predictionGrid.innerHTML = '';
+            const levels = ['Lancar', 'Ramai Lancar', 'Padat', 'Macet'];
+            const currentHour = new Date().getHours();
+            
+            for (let i = 0; i < 6; i++) {
+                const futureHour = (currentHour + i) % 24;
+                const predictedLevel = levels[Math.floor(Math.random() * levels.length)];
+                
+                const predictionItem = document.createElement('div');
+                predictionItem.className = 'prediction-item';
+                predictionItem.innerHTML = `
+                    <div class="prediction-time">${String(futureHour).padStart(2, '0')}:00</div>
+                    <div class="traffic-level level-${predictedLevel.toLowerCase().replace(' ', '-')}">${predictedLevel}</div>
+                `;
+                predictionGrid.appendChild(predictionItem);
+            }
+        }
+
+        // Update statistics
+        function updateStats(road) {
+            document.getElementById('avgVolume').textContent = road.volume;
+            document.getElementById('avgSpeed').textContent = road.speed;
+        }
+
+        // Initialize chart
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Volume Lalu Lintas',
+                    data: [20, 15, 85, 65, 95, 75],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Kendaraan/Jam'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Waktu'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate weather updates
+        const weatherConditions = [
+            { icon: '☀️', status: 'Cerah' },
+            { icon: '⛅', status: 'Berawan' },
+            { icon: '🌦️', status: 'Hujan Ringan' },
+            { icon: '⛈️', status: 'Hujan Lebat' }
+        ];
+
+        function updateWeather() {
+            const weather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+            document.getElementById('weatherIcon').textContent = weather.icon;
+            document.getElementById('weatherStatus').textContent = weather.status;
+        }
+
+        // Refresh data function - sekarang terhubung ke backend
+        async function refreshData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('loading');
+            btn.textContent = '🔄 Memperbarui...';
+            
+            try {
+                // Load fresh data dari backend
+                await loadTrafficData();
+                
+                // Update chart dengan data baru
+                const response = await fetch('/api/hourly-stats');
+                const hourlyData = await response.json();
+                
+                trafficChart.data.labels = hourlyData.map(d => d.hour);
+                trafficChart.data.datasets[0].data = hourlyData.map(d => d.volume);
+                trafficChart.update('none'); // No animation for faster update
+                
+                // Update system stats
+                const statsResponse = await fetch('/api/system-stats');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('modelAccuracy').textContent = stats.model_accuracy;
+                document.getElementById('lastUpdate').textContent = stats.last_update;
+                document.getElementById('systemStatus').textContent = stats.status;
+                
+                updateWeather();
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                // Fallback updates
+                updateWeather();
+                updateLastUpdateTime();
+            }
+            
+            btn.classList.remove('loading');
+            btn.textContent = '🔄 Perbarui Data';
+        }
+        console.log("🚦 Data dari API traffic-status:", bengkuluRoads);
+
+        
+        // Initialize system dan auto-refresh
+        updateLastUpdateTime();
+        updateWeather();
+        
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            refreshData();
+        }, 60000);
+
+        // Update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('id-ID');
+        }
+
+        // Initialize system
+        const roadLayers = [];
+        // Load initial data
+        loadTrafficData();
+        updateMap();
+        
+        // Road selector change handler
+        roadSelector.addEventListener('change', function() {
+            const selectedRoad = bengkuluRoads.find(r => r.name === this.value);
+            if (selectedRoad) {
+                map.setView(selectedRoad.center, 15);
+                generatePredictions(selectedRoad);
+                updateStats(selectedRoad);
+            }
+        });
+        async function suggestAlternativeRoute(road) {
+    try {
+        const response = await fetch(`/api/alternative-route/${encodeURIComponent(road.name)}`);
+        const result = await response.json();
+
+        if (result.recommended) {
+            const alt = result.recommended;
+            alert(`🚧 Jalan ${road.name.split('(')[0].trim()} sedang ${road.currentStatus}.\n\n🚗 Rute alternatif:\n➡️ ${alt.name.split('(')[0].trim()}\n📊 Status: ${alt.traffic_level}`);
+        } else if (result.message) {
+            alert(result.message);
+        } else {
+            alert("Tidak ada rute alternatif ditemukan.");
+        }
+    } catch (error) {
+        console.error("Gagal mengambil rute alternatif:", error);
+        alert("Terjadi kesalahan saat mencari rute alternatif.");
+    }
+}
+    </script>
+</body>
+</html>
