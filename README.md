@@ -142,8 +142,9 @@ Model awal menggunakan pendekatan supervised learning. Namun, untuk masa depan:
 
 ## 👥 Tim Pengembang
 
-- I Nyoman Dimas Kresna Adryan (G1A023077)
-- Mohammad Irvan Ramadhansyah  (G1A023089)
+- Lio Kusnata                 (G1A023013)
+- Muhammad Ariqoh Firjatullah (G1A023033)
+- Ajis Saputra Hidayah        (G1A023083)
 ---
 
 > "Dengan sistem ini, kota bengkulu menuju mobilitas yang lancar, cepat, dan cerdas."
