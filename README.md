@@ -1,13 +1,18 @@
 
-# 🧠 Sistem AI Prediksi Kemacetan Kota Bengkulu
+# Sistem AI Prediksi Kemacetan Kota Bengkulu
 
-## 📍 Studi Kasus Smart City – Tugas UAS
+##  Studi Kasus Smart City – Tugas UAS
 
 Sebagai bagian dari program Smart City di Kota Bengkulu, sistem ini dirancang untuk memprediksi kemacetan lalu lintas secara **real-time** dan memberikan **rute alternatif** berdasarkan kondisi terkini. Solusi ini dikembangkan dengan pendekatan **kecerdasan buatan (AI)** dan menyasar peningkatan efisiensi mobilitas serta pengambilan keputusan dinamis oleh Dinas Perhubungan.
 
 ---
+##  Tim Pengembang
 
-## ✅ 1. Model AI yang Digunakan
+- Lio Kusnata                 (G1A023013)
+- Muhammad Ariqoh Firjatullah (G1A023033)
+- Ajis Saputra Hidayah        (G1A023083)
+- 
+##  1. Model AI yang Digunakan
 
 ### Model: `RandomForestClassifier` (Scikit-learn)
 
@@ -20,7 +25,7 @@ Sebagai bagian dari program Smart City di Kota Bengkulu, sistem ini dirancang un
 
 ---
 
-## 🧾 2. Jenis dan Sumber Data
+##  2. Jenis dan Sumber Data
 
 ### Jenis Data:
 - **Waktu:** `hour`, `day_of_week`, `is_weekend`, `is_market_day`
@@ -41,7 +46,7 @@ Sebagai bagian dari program Smart City di Kota Bengkulu, sistem ini dirancang un
 
 ---
 
-## 🔄 3. Desain Alur Kerja Sistem
+##  3. Desain Alur Kerja Sistem
 
 ### Narasi Teknis:
 1. Data lalu lintas dikumpulkan
@@ -67,16 +72,16 @@ flowchart TD
 
 ---
 
-## 📈 4. Evaluasi Model
+##  4. Evaluasi Model
 
-### 🎯 Strategi Evaluasi:
+###  Strategi Evaluasi:
 - Dataset dibagi 80% untuk pelatihan, 20% untuk pengujian
 - Model dievaluasi menggunakan data yang belum pernah dilihat
 - Performa dievaluasi berdasarkan klasifikasi level kemacetan (Lancar, Ramai Lancar, Padat, Macet)
   
 ---
 
-### 📊 Metrik Evaluasi:
+###  Metrik Evaluasi:
 - **Accuracy**: persentase prediksi yang benar terhadap total data uji (~90%)
 - **Precision**: akurasi prediksi positif untuk tiap kelas kemacetan
 - **Recall**: kemampuan model mendeteksi semua kasus dari tiap kelas
@@ -85,7 +90,7 @@ flowchart TD
 
 ---
 
-### 📌 Hasil Evaluasi Model:
+###  Hasil Evaluasi Model:
 
 | Traffic Level    | Precision | Recall | F1-score |
 |------------------|-----------|--------|----------|
@@ -98,7 +103,7 @@ flowchart TD
 
 ---
 
-### ✅ Kesimpulan Evaluasi:
+###  Kesimpulan Evaluasi:
 - Model memberikan hasil **stabil dan akurat** di seluruh kelas kemacetan
 - Prediksi paling akurat pada kondisi **Lancar** dan **Macet**, yang paling kritis untuk pengambilan keputusan cepat
 - Fitur-fitur utama yang memengaruhi hasil prediksi:
@@ -111,36 +116,36 @@ flowchart TD
 
 ---
 
-## 🚀 5. Pengembangan Lanjutan
+##  5. Pengembangan Lanjutan
 
 Seiring dengan implementasi awal sistem prediksi kemacetan ini, terdapat berbagai peluang pengembangan lanjutan yang dapat meningkatkan akurasi, cakupan data, serta dampak nyata terhadap pengelolaan lalu lintas kota. Pengembangan ini tidak hanya mencakup sisi teknis, tetapi juga keterlibatan masyarakat dan integrasi dengan infrastruktur kota yang sudah ada.
 
-### 🔗 Integrasi Data Real-Time:
+###  Integrasi Data Real-Time:
 Untuk meningkatkan keakuratan prediksi dan relevansi data, sistem dapat diintegrasikan dengan sumber data nyata secara langsung:
 - **Sensor IoT (Internet of Things):** alat penghitung kendaraan di simpang-simpang strategis
 - **CCTV Kota:** analisis visual otomatis untuk estimasi volume dan insiden
 - **API Cuaca BMKG:** integrasi prakiraan cuaca untuk memengaruhi prediksi kemacetan
 - **Data Navigasi (Waze, Google Maps):** sebagai sumber crowdsourced kondisi lalu lintas
 
-### 🧠 Model AI Tingkat Lanjut:
+###  Model AI Tingkat Lanjut:
 Model awal menggunakan pendekatan supervised learning. Namun, untuk masa depan:
 - **LSTM (Long Short-Term Memory):** cocok untuk prediksi berbasis deret waktu (time-series) seperti pola mingguan atau musiman
 - **Reinforcement Learning (RL):** untuk sistem pengambilan keputusan adaptif seperti pengaturan dinamis lampu lalu lintas
 - **Hybrid AI + Rule-Based:** menggabungkan kecerdasan buatan dengan logika if-else berbasis aturan lokal (hari pasar, jam buka sekolah, dll)
 
-### 📱 Fitur Tambahan untuk Pengguna:
+###  Fitur Tambahan untuk Pengguna:
 - **Notifikasi berbasis lokasi:** peringatan dini kemacetan dikirim ke pengguna berdasarkan lokasi GPS mereka
 - **Aplikasi mobile ringan:** memudahkan masyarakat mendapatkan info jalan dan rute terbaik
 - **Input crowdsourcing:** memungkinkan masyarakat melaporkan kecelakaan, banjir, atau kemacetan via aplikasi
 
-### 🛰️ Integrasi ke Sistem Kota:
+### 🛰 Integrasi ke Sistem Kota:
 - **Dashboard Komando (Command Center):** tampilan agregat seluruh kota untuk operator Dinas Perhubungan
 - **Deteksi Anomali Otomatis:** sistem akan memberi notifikasi jika terjadi kemacetan tidak biasa
 - **Laporan & Statistik Periodik:** untuk perencanaan tata kota dan pengambilan keputusan jangka panjang
 
 ---
 
-## 👥 Tim Pengembang
+##  Tim Pengembang
 
 - Lio Kusnata                 (G1A023013)
 - Muhammad Ariqoh Firjatullah (G1A023033)
